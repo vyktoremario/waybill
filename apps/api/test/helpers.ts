@@ -23,9 +23,9 @@ export class FakeProvider extends PaystackProvider {
     this.charges.set(input.reference, { status: 'abandoned', amount: input.amountKobo });
     return { checkoutUrl: `https://checkout.fake/${input.reference}` };
   }
-  override async verify(reference: string) {
+  override async verify(reference: string): Promise<{ status: ChargeStatus; amountKobo?: number; currency?: string; refunded?: boolean }> {
     const c = this.charges.get(reference);
-    if (!c) return { status: 'not_found' as const };
+    if (!c) return { status: 'not_found' };
     return { status: c.status, amountKobo: c.amount, currency: 'NGN', refunded: c.refunded };
   }
   override async refund(reference: string, _amount: number) {

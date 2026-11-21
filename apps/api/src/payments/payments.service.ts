@@ -22,7 +22,7 @@ export class PaymentsService {
   ) {}
 
   /** Starts (or resumes) checkout. The same idempotency key always returns the same checkout. */
-  async initiate(orderId: string, idempotencyKey: string): Promise<{ paymentId: string; checkoutUrl: string; reference: string }> {
+  async initiate(orderId: string, idempotencyKey: string, callbackUrl?: string): Promise<{ paymentId: string; checkoutUrl: string; reference: string }> {
     if (!idempotencyKey || idempotencyKey.length > 200) throw invalid('Idempotency-Key header is required');
     for (let attempt = 0; attempt < 3; attempt++) {
       const key = attempt === 0 ? idempotencyKey : `${idempotencyKey}:retry:${attempt}`;
@@ -52,7 +52,7 @@ export class PaymentsService {
           reference: payment.provider_reference,
           amountKobo: Number(payment.amount_kobo),
           email: payment.email,
-          callbackUrl: `${this.config.webUrl}/paid?order=${orderId}`,
+          callbackUrl: callbackUrl ?? `${this.config.webUrl}/`,
           metadata: { orderId, paymentId: payment.id },
         });
         await this.db.query(`UPDATE payments SET checkout_url = $2, updated_at = now() WHERE id = $1`, [payment.id, checkoutUrl]);

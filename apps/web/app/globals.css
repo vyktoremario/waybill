@@ -1,0 +1,92 @@
+/* Waybill · Manifest design tokens (see the design canvas, direction A). */
+:root {
+  --ink: #0e1116;
+  --ink-2: #3a414c;
+  --muted: #5b6472;
+  --line: #d9dde3;
+  --line-soft: #eef0f3;
+  --paper: #f7f8fa;
+  --surface: #ffffff;
+  --cobalt: #1d4ed8;
+  --cobalt-dark: #1e3a8a;
+  --cobalt-soft: #e0e8fb;
+  --cobalt-tint: #f1f5fe;
+  --done: #15803d;
+  --done-soft: #dcfce7;
+  --done-ink: #14532d;
+  --attention: #b45309;
+  --attention-soft: #fef3c7;
+  --attention-ink: #78350f;
+  --problem: #b91c1c;
+  --problem-soft: #fee2e2;
+  --problem-ink: #7f1d1d;
+  --radius: 12px;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-space), var(--font-inter), sans-serif;
+  --font-mono: var(--font-mono-jb), ui-monospace, monospace;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-sans); }
+a { color: var(--cobalt); }
+a:hover { color: var(--cobalt-dark); }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; letter-spacing: -0.01em; }
+button { font-family: inherit; cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+input, select, textarea { font-family: inherit; font-size: 16px; }
+:focus-visible { outline: 3px solid var(--cobalt); outline-offset: 2px; }
+
+.mono { font-family: var(--font-mono); font-weight: 600; }
+.muted { color: var(--muted); }
+.eyebrow { font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: var(--cobalt); text-transform: uppercase; }
+
+.topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 14px 20px; background: var(--surface); border-bottom: 2px solid var(--ink); }
+.brand { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--ink); text-decoration: none; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.card-strong { background: var(--surface); border: 2px solid var(--ink); border-radius: var(--radius); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 10px; font-size: 15px; font-weight: 600; text-decoration: none; }
+.btn-primary { background: var(--cobalt); color: #fff; border: 0; min-height: 56px; font-size: 17px; font-weight: 700; border-radius: 12px; }
+.btn-primary:hover { background: var(--cobalt-dark); color: #fff; }
+.btn-primary:disabled { background: #e3e6eb; color: #4a525e; }
+.btn-secondary { background: var(--surface); color: var(--ink); border: 2px solid var(--ink); }
+.btn-ghost-danger { background: transparent; border: 0; color: var(--problem); text-decoration: underline; }
+.btn-small { min-height: 36px; padding: 0 12px; font-size: 13px; border-radius: 8px; }
+
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.chip-neutral { background: var(--surface); border: 1px solid var(--line); color: var(--ink-2); }
+.chip-info { background: var(--cobalt-soft); color: var(--cobalt-dark); }
+.chip-active { background: var(--cobalt); color: #fff; }
+.chip-done { background: var(--done-soft); color: var(--done-ink); }
+.chip-attention { background: var(--attention-soft); color: var(--attention-ink); }
+.chip-problem { background: var(--problem-soft); color: var(--problem-ink); }
+
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.steps li { display: flex; align-items: center; gap: 10px; font-size: 15px; }
+.dot { width: 20px; height: 20px; border-radius: 50%; flex: none; display: inline-flex; align-items: center; justify-content: center; }
+.dot-done { background: var(--done); color: #fff; }
+.dot-now { border: 3px solid var(--cobalt); }
+.dot-next { border: 2px solid #aeb5c0; }
+
+.banner { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 8px 14px; border-radius: 10px; font-size: 14px; font-weight: 600; }
+.banner-attention { background: var(--attention-soft); border: 1px solid #f59e0b; color: var(--attention-ink); }
+.banner-info { background: var(--cobalt-soft); border: 1px solid #93aeef; color: var(--cobalt-dark); }
+.banner-problem { background: var(--problem-soft); border: 1px solid #fca5a5; color: var(--problem-ink); }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 14px; font-weight: 600; }
+.field input, .field select { height: 48px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); }
+.field-hint { font-size: 13px; color: var(--muted); }
+
+.pin { display: flex; gap: 8px; }
+.pin span { width: 52px; height: 60px; border-radius: 8px; background: var(--cobalt-tint); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 30px; font-weight: 600; }
+
+.map { width: 100%; height: 100%; min-height: 220px; background: #e8ecf1; }
+.maplibregl-ctrl-attrib { font-size: 11px; }
+.marker-driver { width: 20px; height: 20px; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 1px 3px rgb(0 0 0 / 30%); }
+.marker-pickup { width: 18px; height: 18px; border-radius: 4px; background: var(--ink); border: 3px solid #fff; }
+.marker-dropoff { width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 5px solid var(--ink); }
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

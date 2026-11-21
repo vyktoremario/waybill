@@ -64,7 +64,7 @@ export class PaystackProvider implements PaymentProvider {
     return { checkoutUrl: json.data.authorization_url as string };
   }
 
-  async verify(reference: string) {
+  async verify(reference: string): Promise<{ status: ChargeStatus; amountKobo?: number; currency?: string; refunded?: boolean }> {
     const { json } = await this.call('GET', `/transaction/verify/${encodeURIComponent(reference)}`);
     if (!json.status) {
       if (/not found/i.test(String(json.message))) return { status: 'not_found' as const };

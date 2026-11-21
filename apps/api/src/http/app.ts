@@ -44,7 +44,7 @@ type AuthedRequest = Request & { principal: Principal; rawBody?: Buffer };
 @Injectable()
 class RoleGuard implements CanActivate {
   constructor(
-    private readonly reflector: Reflector,
+    @Inject(Reflector) private readonly reflector: Reflector,
     @Inject(AUTH) private readonly auth: AuthService,
   ) {}
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
@@ -103,7 +103,7 @@ class PublicController {
   @Post('track/:token/pay')
   async pay(@Param('token') token: string, @Headers('idempotency-key') key: string) {
     const o = await this.core.orders.getForTracking(token);
-    return this.core.payments.initiate(o.id, key);
+    return this.core.payments.initiate(o.id, key, `${this.core.config.webUrl}/t/${token}`);
   }
 
   @Post('track/:token/cancel')
