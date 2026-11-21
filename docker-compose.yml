@@ -1,0 +1,31 @@
+# Local stack: Postgres + PostGIS, RabbitMQ, Redis. The api and worker run on the host (pnpm dev)
+# or as containers in the failure demo (docker-compose.demo.yml).
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: waybill
+      POSTGRES_PASSWORD: waybill
+      POSTGRES_DB: waybill
+    ports: ["55432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U waybill"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  rabbitmq:
+    image: rabbitmq:4-management
+    ports: ["55672:5672", "15672:15672"]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+  redis:
+    image: redis:7-alpine
+    ports: ["56379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 30

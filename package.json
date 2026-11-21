@@ -1,0 +1,17 @@
+{
+  "name": "waybill",
+  "private": true,
+  "packageManager": "pnpm@10.14.0",
+  "engines": { "node": ">=22.12" },
+  "scripts": {
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "infra:up": "docker compose up -d --wait",
+    "infra:down": "docker compose down -v"
+  },
+  "devDependencies": {
+    "turbo": "^2.11.13",
+    "typescript": "^6.0.3"
+  }
+}
