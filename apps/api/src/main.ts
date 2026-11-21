@@ -1,23 +1,12 @@
 import 'reflect-metadata';
-import { NestFactory } from '@nestjs/core';
-import type { NestExpressApplication } from '@nestjs/platform-express';
 import { loadConfig } from './config';
-import { createCore, type Core } from './core';
+import { createCore } from './core';
 import { migrate } from './db/migrate';
-import { AppModule } from './http/app';
+import { createApp } from './http/create-app';
 
-export async function createApp(core: Core): Promise<NestExpressApplication> {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule.forCore(core), {
-    rawBody: true, // the Paystack signature is over the raw bytes
-    logger: ['error', 'warn'],
-  });
-  app.useBodyParser('raw', { type: ['image/jpeg', 'image/png', 'image/webp'], limit: '4mb' });
-  app.enableCors({ origin: true, credentials: false });
-  app.enableShutdownHooks();
-  return app;
-}
-
-export async function main() {
+// The entry file exports nothing and starts on load: Vercel's NestJS support loads it and hooks app.listen(),
+// the same way it runs any NestJS app. Locally and in Docker it simply listens on PORT.
+async function main() {
   const config = loadConfig();
   if (process.env.MIGRATE_ON_START !== '0') await migrate(config.databaseUrl, { quiet: true });
   const core = createCore(config);
@@ -26,8 +15,6 @@ export async function main() {
   console.log(`[api] listening on :${config.port}`);
 }
 
-// Started on load, not only when run as a script: Vercel's NestJS support loads this file and hooks
-// app.listen(), the same way it runs any NestJS app.
 main().catch((err) => {
   console.error('[api] fatal', err);
   process.exit(1);
