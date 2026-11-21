@@ -1,4 +1,14 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "regions": ["fra1"]
+  "regions": ["fra1"],
+  "daemons": {
+    "worker": {
+      "root": "../..",
+      "entrypoint": "apps/api/Dockerfile",
+      "command": ["node", "dist/worker.js"],
+      "instances": { "fra1": 1 },
+      "resources": { "requests": { "memory": "1Gi" } },
+      "terminationGracePeriodSeconds": 30
+    }
+  }
 }
