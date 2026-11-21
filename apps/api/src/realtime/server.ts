@@ -13,8 +13,9 @@ import type { Db } from '../db/db';
  * Protocol (JSON): client → {type:'join', room} ; server → {type:'joined', room} | {type:'error', message} | RealtimeMessage + {room}
  * Auth: ?token=<JWT> for dispatchers and drivers, ?tracking=<tracking token> for customers.
  */
-export function attachRealtime(server: Server, deps: { db: Db; auth: AuthService; redisUrl: string }) {
-  const wss = new WebSocketServer({ server, path: '/ws' });
+export function attachRealtime(server: Server, deps: { db: Db; auth: AuthService; redisUrl: string }, opts: { path?: string } = { path: '/ws' }) {
+  // On Vercel the function owns its route (/api/ws), so it accepts upgrades on any path (opts.path undefined).
+  const wss = new WebSocketServer({ server, path: opts.path });
   const sub = new Redis(deps.redisUrl);
   sub.on('error', (err) => console.error('[realtime] redis', err.message));
   const members = new Map<string, Set<WebSocket>>();
