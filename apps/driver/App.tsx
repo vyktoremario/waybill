@@ -139,7 +139,9 @@ function Login({ onDone }: { onDone: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: c.paper, justifyContent: 'center', padding: 24, gap: 16 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: c.paper }}>
+      {/* SafeAreaView replaces padding with the safe-area insets on iOS, so pad an inner view. */}
+      <View style={{ flex: 1, justifyContent: 'center', padding: 24, gap: 16 }}>
       <Text style={st.eyebrow}>WAYBILL DRIVER</Text>
       <Text style={st.h1}>Sign in</Text>
       <TextInput accessibilityLabel="Email" placeholder="Email" autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} style={st.input} />
@@ -160,6 +162,7 @@ function Login({ onDone }: { onDone: () => void }) {
         }}
       />
       {error && <Text style={{ color: c.problem, fontWeight: '600' }}>{error}</Text>}
+      </View>
     </SafeAreaView>
   );
 }
@@ -169,6 +172,8 @@ function Home({ current, online, refresh, onSignOut }: { current: any; online: b
   const offer = current?.offer;
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(Date.now());
+  // The offer's full length, taken from when it first appeared, so the bar works for any TTL.
+  const ttl = useRef<{ id?: string; seconds: number }>({ seconds: 30 });
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
@@ -207,6 +212,7 @@ function Home({ current, online, refresh, onSignOut }: { current: any; online: b
   if (offer) {
     const o = offer.order;
     const left = Math.max(0, Math.round((new Date(offer.expiresAt).getTime() - now) / 1000));
+    if (ttl.current.id !== offer.id) ttl.current = { id: offer.id, seconds: Math.max(left, 1) };
     return (
       <ScrollView contentContainerStyle={st.screen}>
         <Text style={st.eyebrow}>NEW JOB OFFER</Text>
@@ -228,7 +234,7 @@ function Home({ current, online, refresh, onSignOut }: { current: any; online: b
             <Text style={mono}>0:{String(left).padStart(2, '0')}</Text>
           </View>
           <View style={{ height: 6, borderRadius: 3, backgroundColor: c.disabledBg }}>
-            <View style={{ height: 6, borderRadius: 3, backgroundColor: c.cobalt, width: `${Math.min(100, (left / 30) * 100)}%` }} />
+            <View style={{ height: 6, borderRadius: 3, backgroundColor: c.cobalt, width: `${Math.min(100, (left / ttl.current.seconds) * 100)}%` }} />
           </View>
         </View>
         <Button label="Accept job" disabled={busy || !online || left === 0} onPress={() => void answer('accept_offer')} />
@@ -477,7 +483,7 @@ function ConflictScreen({ conflict, onDone }: { conflict: { message: string; ser
         <Text style={{ fontSize: 28, color: c.problem, fontWeight: '800' }}>!</Text>
       </View>
       <Text style={st.h1}>This order changed while you were offline</Text>
-      <Text style={st.sub}>{conflict.message}.</Text>
+      <Text style={st.sub}>{explainConflict(conflict.serverStatus)}</Text>
       <Card>
         <View style={st.row}>
           <Text style={st.rowLabel}>Order now</Text>
@@ -492,6 +498,20 @@ function ConflictScreen({ conflict, onDone }: { conflict: { message: string; ser
       <Button label="Back to jobs" onPress={onDone} />
     </ScrollView>
   );
+}
+
+function explainConflict(status?: string): string {
+  switch (status) {
+    case 'CANCELLED':
+      return 'Dispatch cancelled this order. The steps you took offline were not recorded.';
+    case 'PAID':
+    case 'OFFERED':
+      return 'This order was taken off you and is being given to another driver.';
+    case 'DELIVERED':
+      return 'This order is already marked delivered.';
+    default:
+      return 'The order was changed on the server, so the steps you took offline were not recorded.';
+  }
 }
 
 function Stat({ label, value, last }: { label: string; value: string; last?: boolean }) {

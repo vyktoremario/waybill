@@ -90,7 +90,7 @@ Set `EXPO_PUBLIC_API_URL` in that file to your computer's LAN address, then:
 pnpm --filter @waybill/driver start
 ```
 
-Open it in Expo Go or a development build. The connection banner has a "Demo: go offline" switch, so you can show the offline flow without turning off the phone's radio.
+Open it in Expo Go or a development build (checked in the iOS Simulator with Expo Go: sign-in, offer, accept, offline queue and the conflict screen). The connection banner has a "Demo: go offline" switch, so you can show the offline flow without turning off the phone's radio.
 
 ## The failure demo
 
@@ -114,6 +114,7 @@ Scenarios:
         outbox peaked at 15; all 3 delivered
   ✓ F9  Dispatch cancels while the driver is offline; the driver then marks pickup → rejected, refunded
   ✓ F8  Drivers go offline after pickup, keep working, then sync
+        8 driver steps and 66 location points recorded after the fact; 0 duplicated steps
 
 Invariants:
   ✓ no lost orders: every order has a complete event history
