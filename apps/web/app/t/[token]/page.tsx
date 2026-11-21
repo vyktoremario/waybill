@@ -1,8 +1,11 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useParams } from 'next/navigation';
+import { Check, Loader2, Share2 } from 'lucide-react';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
+import { Logo } from '@/components/Brand';
+import { Skeleton, useToast } from '@/components/Toast';
 import { API_URL, api } from '@/lib/api';
 import { useRealtime } from '@/lib/realtime';
 import { STATUS_LABEL, fmtTime, naira, shortRef } from '@/lib/status';
@@ -18,6 +21,9 @@ const STEPS: Array<{ label: string; reached: string[] }> = [
 
 export default function TrackingPage() {
   const { token } = useParams<{ token: string }>();
+  // Paystack sends the customer back with ?reference=…; the webhook may land a few seconds later.
+  const returnedFromCheckout = Boolean(useSearchParams().get('reference'));
+  const toast = useToast();
   const [o, setO] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -53,7 +59,18 @@ export default function TrackingPage() {
   }, [o?.status, load]);
 
   if (error && !o) return <Shell><div className="banner banner-problem" role="alert">{error}</div></Shell>;
-  if (!o) return <Shell><p className="muted">Loading…</p></Shell>;
+  if (!o)
+    return (
+      <Shell>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }} aria-busy="true" aria-label="Loading your delivery">
+          <Skeleton h={14} w={120} />
+          <Skeleton h={34} w="80%" />
+          <Skeleton h={16} w="55%" />
+          <Skeleton h={150} r={12} />
+          <Skeleton h={110} r={12} />
+        </div>
+      </Shell>
+    );
 
   const label = STATUS_LABEL[o.status] ?? { customer: o.status, tone: 'neutral' };
   const live = Boolean(o.driverLocation);
@@ -79,6 +96,7 @@ export default function TrackingPage() {
     setBusy(true);
     try {
       setO(await api(`/track/${token}/cancel`, { method: 'POST', body: JSON.stringify({ reason: 'cancelled by customer', commandId: crypto.randomUUID() }) }));
+      toast('Delivery cancelled. Any payment is being refunded.');
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -106,7 +124,14 @@ export default function TrackingPage() {
         </span>
       </div>
 
-      {o.status === 'AWAITING_PAYMENT' && (
+      {o.status === 'AWAITING_PAYMENT' && returnedFromCheckout && (
+        <div className="card fade-in" style={{ padding: 16, display: 'flex', gap: 12, alignItems: 'flex-start' }} role="status">
+          <Loader2 size={22} className="spin" aria-hidden="true" style={{ color: 'var(--cobalt)', flex: 'none' }} />
+          <span><strong>Confirming your payment with Paystack.</strong> This usually takes a few seconds; the page updates by itself.</span>
+        </div>
+      )}
+
+      {o.status === 'AWAITING_PAYMENT' && !returnedFromCheckout && (
         <div className="card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <span>Waiting for your payment of <strong className="mono">{naira(o.priceKobo)}</strong>. If you just paid, this updates in a few seconds.</span>
           <button className="btn btn-primary" onClick={pay} disabled={busy}>Pay {naira(o.priceKobo)}</button>
@@ -118,7 +143,7 @@ export default function TrackingPage() {
           <span style={{ fontWeight: 600 }}>Delivery PIN</span>
           <div className="pin" aria-label={`PIN ${o.pin.split('').join(' ')}`}>{o.pin.split('').map((d: string, i: number) => <span key={i}>{d}</span>)}</div>
           <span style={{ fontSize: 13, color: 'var(--ink-2)' }}>Only give this to the driver when the parcel is in your hands. Share this page with whoever receives it.</span>
-          <button className="btn btn-secondary" onClick={() => void share()}>Share tracking link</button>
+          <button className="btn btn-secondary" onClick={() => void share()}><Share2 size={18} aria-hidden="true" />Share tracking link</button>
         </div>
       )}
 
@@ -137,7 +162,7 @@ export default function TrackingPage() {
           const when = at(['PAID', 'ASSIGNED', 'PICKED_UP', 'DELIVERED'][i]!);
           return (
             <li key={s.label} style={{ fontWeight: now ? 700 : 400, color: done || now ? 'var(--ink)' : 'var(--muted)' }}>
-              <span className={`dot ${done ? 'dot-done' : now ? 'dot-now' : 'dot-next'}`} aria-hidden="true">{done ? '✓' : ''}</span>
+              <span className={`dot ${done ? 'dot-done' : now ? 'dot-now' : 'dot-next'}`} aria-hidden="true">{done ? <Check size={13} strokeWidth={3} /> : null}</span>
               {s.label}
               <span className="mono muted" style={{ marginLeft: 'auto', fontSize: 13, fontWeight: 500 }}>{done && when ? fmtTime(when) : now ? 'Now' : ''}</span>
             </li>
@@ -163,7 +188,7 @@ export default function TrackingPage() {
   async function share() {
     const url = window.location.href;
     if (navigator.share) await navigator.share({ title: 'Track your Waybill delivery', url }).catch(() => undefined);
-    else await navigator.clipboard.writeText(url).then(() => alert('Link copied'));
+    else await navigator.clipboard.writeText(url).then(() => toast('Tracking link copied'));
   }
 }
 
@@ -189,7 +214,7 @@ function Shell({ children, refId }: { children: React.ReactNode; refId?: string 
   return (
     <>
       <header className="topbar" style={{ justifyContent: 'space-between' }}>
-        <a href="/" className="brand">Waybill</a>
+        <Logo size={26} />
         {refId && <span className="mono muted" style={{ fontSize: 13 }}>{refId}</span>}
       </header>
       <main style={{ maxWidth: 480, margin: '0 auto', padding: '0 16px 48px', display: 'flex', flexDirection: 'column', gap: 18 }}>

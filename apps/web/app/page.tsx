@@ -1,126 +1,179 @@
 'use client';
 
-import { quoteKobo, type PackageSize } from '@waybill/shared';
+import { Check, CreditCard, MapPin, Package, RotateCcw, ShieldCheck, Truck, WifiOff } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
-import { api, ApiError } from '@/lib/api';
-import { ABUJA_AREAS } from '@/lib/places';
-import { naira } from '@/lib/status';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { DemoBanner, SiteFooter, SiteHeader } from '@/components/Brand';
 
-const SIZES: Array<{ value: PackageSize; label: string; hint: string }> = [
-  { value: 'small', label: 'Small', hint: 'Fits on a bike: documents, phone, food' },
-  { value: 'medium', label: 'Medium', hint: 'Needs a car: a box or a few bags' },
-  { value: 'large', label: 'Large', hint: 'Needs a van: furniture, many boxes' },
+const FAQ = [
+  {
+    q: 'Is this a real delivery service?',
+    a: 'No. Waybill is a portfolio project. Payments run in Paystack test mode with test cards, and no driver will turn up. Everything else (booking, payment, assignment, live tracking, refunds) works end to end.',
+  },
+  {
+    q: 'What happens if no driver accepts my parcel?',
+    a: 'Waybill keeps offering it to nearby drivers. If nobody takes it within 20 minutes, the order is cancelled and your payment is refunded automatically.',
+  },
+  {
+    q: 'Why do I need a PIN?',
+    a: 'The PIN on your tracking page is the proof of delivery. The driver can only complete the delivery by entering it, so give it to them only when the parcel is in your hands.',
+  },
+  {
+    q: 'When can I see the driver on the map?',
+    a: 'From pickup until delivery. Before pickup you see their progress but not their location, which protects drivers between jobs.',
+  },
 ];
 
-export default function BookPage() {
-  const [form, setForm] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    receiver: '',
-    pickupArea: 'Garki',
-    pickupStreet: '',
-    dropoffArea: 'Wuse 2',
-    dropoffStreet: '',
-    item: '',
-    size: 'small' as PackageSize,
-  });
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm({ ...form, [k]: e.target.value });
+export default function Landing() {
+  const router = useRouter();
+  const [link, setLink] = useState('');
+  const [trackError, setTrackError] = useState<string | null>(null);
 
-  const pickup = ABUJA_AREAS.find((a) => a.name === form.pickupArea)!;
-  const dropoff = ABUJA_AREAS.find((a) => a.name === form.dropoffArea)!;
-  const quote = useMemo(() => quoteKobo(pickup, dropoff, form.size), [pickup, dropoff, form.size]);
-
-  async function submit(e: React.FormEvent) {
+  function track(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(true);
-    setError(null);
-    try {
-      const created = await api<{ order: { id: string }; trackingToken: string }>('/orders', {
-        method: 'POST',
-        body: JSON.stringify({
-          customer: { name: form.name, phone: form.phone, email: form.email },
-          receiverName: form.receiver,
-          pickup: { address: `${form.pickupStreet}, ${form.pickupArea}`, location: { lat: pickup.lat, lng: pickup.lng } },
-          dropoff: { address: `${form.dropoffStreet}, ${form.dropoffArea}`, location: { lat: dropoff.lat, lng: dropoff.lng } },
-          item: form.item,
-          packageSize: form.size,
-        }),
-      });
-      // One idempotency key per order, so a double click or a retry opens the same checkout.
-      const pay = await api<{ checkoutUrl: string }>(`/track/${created.trackingToken}/pay`, {
-        method: 'POST',
-        headers: { 'idempotency-key': `checkout:${created.order.id}` },
-      });
-      window.location.href = pay.checkoutUrl;
-    } catch (err) {
-      setError(err instanceof ApiError && err.status === 400 ? 'Please check the highlighted details.' : (err as Error).message);
-      setBusy(false);
+    // Accept a full tracking link or just the token at the end of it.
+    const token = link.trim().split('/t/').pop()?.split(/[?#]/)[0]?.trim();
+    if (!token || token.length < 10) {
+      setTrackError('Paste the tracking link from your booking, e.g. waybill…/t/AbC123…');
+      return;
     }
+    router.push(`/t/${token}`);
   }
 
   return (
     <>
-      <header className="topbar">
-        <Link href="/" className="brand">Waybill</Link>
-        <span className="muted" style={{ fontSize: 14 }}>Same-day delivery · Abuja</span>
-        <Link href="/dispatch" style={{ marginLeft: 'auto', fontSize: 14 }}>Dispatch</Link>
-      </header>
-      <main style={{ maxWidth: 720, margin: '0 auto', padding: '32px 16px 64px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span className="eyebrow">Send a parcel</span>
-          <h1 style={{ fontSize: 36 }}>Book a delivery</h1>
-          <p className="muted" style={{ margin: 0 }}>Pay with Paystack (test mode). You get a tracking link to share with the receiver.</p>
-        </div>
-
-        <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <fieldset className="card" style={{ padding: 20, display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
-            <legend className="eyebrow" style={{ padding: '0 6px' }}>From</legend>
-            <div className="field"><label htmlFor="pa">Pickup area</label><select id="pa" value={form.pickupArea} onChange={set('pickupArea')}>{ABUJA_AREAS.map((a) => <option key={a.name}>{a.name}</option>)}</select></div>
-            <div className="field"><label htmlFor="ps">Street address</label><input id="ps" required minLength={3} value={form.pickupStreet} onChange={set('pickupStreet')} placeholder="12 Ahmadu Bello Way" /></div>
-            <div className="field"><label htmlFor="n">Your name</label><input id="n" required value={form.name} onChange={set('name')} autoComplete="name" /></div>
-            <div className="field"><label htmlFor="ph">Your phone</label><input id="ph" required type="tel" minLength={7} value={form.phone} onChange={set('phone')} autoComplete="tel" /></div>
-            <div className="field" style={{ gridColumn: '1 / -1' }}><label htmlFor="em">Email for the receipt</label><input id="em" required type="email" value={form.email} onChange={set('email')} autoComplete="email" /></div>
-          </fieldset>
-
-          <fieldset className="card" style={{ padding: 20, display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
-            <legend className="eyebrow" style={{ padding: '0 6px' }}>To</legend>
-            <div className="field"><label htmlFor="da">Drop-off area</label><select id="da" value={form.dropoffArea} onChange={set('dropoffArea')}>{ABUJA_AREAS.map((a) => <option key={a.name}>{a.name}</option>)}</select></div>
-            <div className="field"><label htmlFor="ds">Street address</label><input id="ds" required minLength={3} value={form.dropoffStreet} onChange={set('dropoffStreet')} placeholder="Plot 14, Aminu Kano Crescent" /></div>
-            <div className="field" style={{ gridColumn: '1 / -1' }}><label htmlFor="r">Receiver's name</label><input id="r" required value={form.receiver} onChange={set('receiver')} /></div>
-          </fieldset>
-
-          <fieldset className="card" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <legend className="eyebrow" style={{ padding: '0 6px' }}>Parcel</legend>
-            <div className="field"><label htmlFor="it">What are you sending?</label><input id="it" required value={form.item} onChange={set('item')} placeholder="Documents" /></div>
-            <div role="radiogroup" aria-label="Package size" style={{ display: 'grid', gap: 10, gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
-              {SIZES.map((s) => (
-                <label key={s.value} className={form.size === s.value ? 'card-strong' : 'card'} style={{ padding: 14, display: 'flex', gap: 10, cursor: 'pointer' }}>
-                  <input type="radio" name="size" value={s.value} checked={form.size === s.value} onChange={() => setForm({ ...form, size: s.value })} />
-                  <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <strong>{s.label}</strong>
-                    <span className="field-hint">{s.hint}</span>
-                  </span>
-                </label>
-              ))}
+      <DemoBanner />
+      <SiteHeader />
+      <main>
+        <section className="container hero">
+          <div className="hero-copy">
+            <span className="eyebrow-mono">SAME-DAY DELIVERY · ABUJA</span>
+            <h1 className="hero-title">Send it across Abuja. Watch it to the door.</h1>
+            <p className="hero-lede">Book in a minute and pay with Paystack. Share a live tracking link with whoever is receiving. The driver hands over only when they read out your PIN.</p>
+            <div className="hero-actions">
+              <Link href="/send" className="btn btn-cta btn-lg">Get a price</Link>
+              <Link href="/#how" className="btn btn-secondary btn-lg">How it works</Link>
             </div>
-          </fieldset>
-
-          <div className="card" style={{ padding: 20, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 16 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <span className="muted" style={{ fontSize: 13 }}>Price · {(quote.distanceMeters / 1000).toFixed(1)} km straight-line</span>
-              <span className="mono" style={{ fontSize: 28 }}>{naira(quote.priceKobo)}</span>
-            </div>
-            <button className="btn btn-primary" style={{ marginLeft: 'auto', minWidth: 220 }} disabled={busy}>
-              {busy ? 'Opening checkout…' : `Pay ${naira(quote.priceKobo)}`}
-            </button>
+            <ul className="hero-points">
+              <li><Check size={18} aria-hidden="true" />Price before you pay</li>
+              <li><Check size={18} aria-hidden="true" />Refunded if no driver takes it</li>
+              <li><Check size={18} aria-hidden="true" />Live map after pickup</li>
+            </ul>
           </div>
-          {error && <div className="banner banner-problem" role="alert">{error}</div>}
-        </form>
+          <HeroVisual />
+        </section>
+
+        <section id="track" className="band">
+          <form className="container track-form" onSubmit={track}>
+            <label htmlFor="trk" className="track-label">Track a parcel</label>
+            <input id="trk" value={link} onChange={(e) => { setLink(e.target.value); setTrackError(null); }} placeholder="Paste your tracking link" aria-describedby={trackError ? 'trk-err' : undefined} />
+            <button className="btn btn-secondary" style={{ minHeight: 50 }}>Track</button>
+            {trackError && <p id="trk-err" className="field-error" role="alert">{trackError}</p>}
+          </form>
+        </section>
+
+        <section id="how" className="container section">
+          <div className="section-head">
+            <span className="eyebrow-mono">HOW IT WORKS</span>
+            <h2 className="section-title">Three steps, one link to share</h2>
+          </div>
+          <ol className="steps-grid">
+            <Step n="01" icon={<CreditCard size={22} aria-hidden="true" />} title="Book and pay">Choose pickup and drop-off, pick a parcel size, and see the price before you pay with Paystack.</Step>
+            <Step n="02" icon={<Truck size={22} aria-hidden="true" />} title="A nearby driver takes it">The closest driver with the right vehicle gets the job, and photographs the parcel at pickup.</Step>
+            <Step n="03" icon={<MapPin size={22} aria-hidden="true" />} title="Track and hand over">The receiver follows the driver live and gives the 4-digit PIN at the door. That confirms delivery.</Step>
+          </ol>
+        </section>
+
+        <section className="dark-band">
+          <div className="container section">
+            <h2 className="section-title" style={{ maxWidth: 720 }}>If something goes wrong, your money doesn&apos;t get lost with it</h2>
+            <div className="promise-grid">
+              <Promise icon={<RotateCcw size={22} aria-hidden="true" />} title="No driver? Refunded.">If nobody takes your parcel within 20 minutes, the order is cancelled and refunded automatically.</Promise>
+              <Promise icon={<ShieldCheck size={22} aria-hidden="true" />} title="Paid twice? Refunded.">Opened checkout in two tabs and paid both? The extra payment goes back by itself.</Promise>
+              <Promise icon={<WifiOff size={22} aria-hidden="true" />} title="Patchy network? Still delivered.">The driver app keeps working without signal and syncs when it&apos;s back.</Promise>
+            </div>
+          </div>
+        </section>
+
+        <section id="pricing" className="container section pricing">
+          <div className="pricing-copy">
+            <span className="eyebrow-mono">PRICING</span>
+            <h2 className="section-title">₦1,500 + ₦300 per km</h2>
+            <p className="muted-lg">Measured in a straight line between pickup and drop-off, times the parcel size, rounded up to the nearest ₦50. You see the exact price before you pay.</p>
+            <Link href="/send" className="btn btn-cta" style={{ alignSelf: 'flex-start' }}>Get your price</Link>
+          </div>
+          <table className="price-table">
+            <caption className="sr-only">Price multiplier by parcel size</caption>
+            <thead><tr><th scope="col">Size</th><th scope="col">Carried by</th><th scope="col" className="num">× price</th></tr></thead>
+            <tbody>
+              <tr><th scope="row"><Package size={16} aria-hidden="true" /> Small</th><td>Bike, car or van</td><td className="num mono">1.0</td></tr>
+              <tr><th scope="row"><Package size={18} aria-hidden="true" /> Medium</th><td>Car or van</td><td className="num mono">1.3</td></tr>
+              <tr><th scope="row"><Package size={20} aria-hidden="true" /> Large</th><td>Van</td><td className="num mono">1.8</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="faq" className="container section">
+          <div className="section-head">
+            <span className="eyebrow-mono">FAQ</span>
+            <h2 className="section-title">Questions</h2>
+          </div>
+          <div className="faq">
+            {FAQ.map((f) => (
+              <details key={f.q}>
+                <summary>{f.q}</summary>
+                <p>{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
       </main>
+      <SiteFooter />
     </>
+  );
+}
+
+function Step({ n, icon, title, children }: { n: string; icon: React.ReactNode; title: string; children: React.ReactNode }) {
+  return (
+    <li className="step-card">
+      <span className="step-top"><span className="step-icon">{icon}</span><span className="mono muted">{n}</span></span>
+      <h3>{title}</h3>
+      <p>{children}</p>
+    </li>
+  );
+}
+
+function Promise({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+  return (
+    <div className="promise">
+      <span className="promise-icon">{icon}</span>
+      <strong>{title}</strong>
+      <span>{children}</span>
+    </div>
+  );
+}
+
+/** An illustration of the tracking page over a stylised map (decorative; the real map is MapLibre). */
+function HeroVisual() {
+  return (
+    <div className="hero-visual" aria-hidden="true">
+      <div className="hero-map">
+        <svg width="100%" height="100%" viewBox="0 0 500 420" preserveAspectRatio="xMidYMid slice" fill="none">
+          <path d="M0 90 H500 M0 250 H500 M0 360 H500 M110 0 V420 M300 0 V420 M420 0 V420" stroke="#fff" strokeWidth="12" />
+          <path d="M0 400 L500 60" stroke="#fff" strokeWidth="20" />
+          <path className="hero-route" d="M120 320 C 180 300, 220 230, 300 210 S 400 120, 420 90" stroke="#1D4ED8" strokeWidth="6" strokeLinecap="round" />
+        </svg>
+        <span className="hero-pin hero-pin-pickup" />
+        <span className="hero-pin hero-pin-driver" />
+        <span className="hero-pin hero-pin-drop" />
+      </div>
+      <div className="hero-card">
+        <span className="eyebrow">On the way to you</span>
+        <strong className="hero-card-title">About 12 min away</strong>
+        <span className="muted" style={{ fontSize: 13 }}>Delivery PIN</span>
+        <div className="pin pin-sm"><span>4</span><span>8</span><span>1</span><span>7</span></div>
+      </div>
+    </div>
   );
 }
