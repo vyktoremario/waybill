@@ -32,7 +32,9 @@ export class PaystackProvider implements PaymentProvider {
   ) {}
 
   private async call(method: 'GET' | 'POST', path: string, body?: unknown): Promise<{ httpStatus: number; json: any }> {
-    const res = await fetch(`${this.baseUrl}${path}`, {
+    // Only status and json() are used. Typed locally because Vercel's NestJS build resolves a different
+    // global Response type than local tsc does.
+    const res: { status: number; json(): Promise<unknown> } = await fetch(`${this.baseUrl}${path}`, {
       method,
       headers: { Authorization: `Bearer ${this.secretKey}`, 'Content-Type': 'application/json' },
       body: body ? JSON.stringify(body) : undefined,
@@ -40,7 +42,7 @@ export class PaystackProvider implements PaymentProvider {
     }).catch((err: any) => {
       throw new ProviderError(`paystack unreachable: ${err?.message ?? err}`, 'unavailable');
     });
-    const json = await res.json().catch(() => ({}));
+    const json: any = await res.json().catch(() => ({}));
     if (res.status >= 500) throw new ProviderError(`paystack ${res.status}`, 'unavailable');
     return { httpStatus: res.status, json };
   }
