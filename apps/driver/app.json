@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "Waybill Driver",
+    "slug": "waybill-driver",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "test.waybill.driver",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Waybill shares your location with dispatch and the customer while you are on a delivery.",
+        "NSCameraUsageDescription": "Take a photo of the parcel at pickup."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#F7F8FA",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "test.waybill.driver",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-sqlite",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Waybill shares your location with dispatch and the customer while you are on a delivery."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Take a photo of the parcel at pickup."
+        }
+      ]
+    ],
+    "scheme": "waybill-driver"
+  }
+}
