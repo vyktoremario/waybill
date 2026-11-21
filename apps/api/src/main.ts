@@ -26,9 +26,9 @@ export async function main() {
   console.log(`[api] listening on :${config.port}`);
 }
 
-if (require.main === module) {
-  main().catch((err) => {
-    console.error('[api] fatal', err);
-    process.exit(1);
-  });
-}
+// Started on load, not only when run as a script: Vercel's NestJS support loads this file and hooks
+// app.listen(), the same way it runs any NestJS app.
+main().catch((err) => {
+  console.error('[api] fatal', err);
+  process.exit(1);
+});
