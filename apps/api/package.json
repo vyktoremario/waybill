@@ -24,9 +24,9 @@
     "vercel-build": "pnpm --filter @waybill/shared build && tsc -p tsconfig.build.json && node dist/db/migrate.js"
   },
   "dependencies": {
-    "@nestjs/common": "^12.6.0",
-    "@nestjs/core": "^12.6.0",
-    "@nestjs/platform-express": "^12.6.0",
+    "@nestjs/common": "^11.2.11",
+    "@nestjs/core": "^11.2.11",
+    "@nestjs/platform-express": "^11.2.11",
     "@waybill/shared": "workspace:*",
     "amqplib": "^0.10.9",
     "ioredis": "^5.8.2",
