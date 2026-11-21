@@ -1,0 +1,53 @@
+{
+  "orders": [
+    {
+      "key": "ada",
+      "payments": [
+        {
+          "reference": "ref_ada",
+          "amountKobo": 305000
+        }
+      ]
+    },
+    {
+      "key": "bola",
+      "payments": [
+        {
+          "reference": "ref_bola",
+          "amountKobo": 305000
+        }
+      ]
+    },
+    {
+      "key": "chidi",
+      "payments": [
+        {
+          "reference": "ref_chidi_tab1",
+          "amountKobo": 305000
+        },
+        {
+          "reference": "ref_chidi_tab2",
+          "amountKobo": 305000
+        }
+      ]
+    },
+    {
+      "key": "dayo",
+      "payments": [
+        {
+          "reference": "ref_dayo",
+          "amountKobo": 305000
+        }
+      ]
+    },
+    {
+      "key": "emeka",
+      "payments": [
+        {
+          "reference": "ref_emeka",
+          "amountKobo": 305000
+        }
+      ]
+    }
+  ]
+}

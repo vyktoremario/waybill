@@ -47,7 +47,8 @@ export async function hookstormReset(core: Core, _body: unknown): Promise<{ ok: 
 export async function hookstormState(core: Core): Promise<any> {
   const payments = (
     await core.db.query(
-      `SELECT p.provider_reference AS reference, p.status, p.role, p.amount_kobo::int AS amount, o.status AS order_status, o.id AS order_id
+      `SELECT p.provider_reference AS reference, p.status, p.role, p.amount_kobo::int AS amount, o.status AS order_status, o.id AS order_id,
+              EXISTS (SELECT 1 FROM outbox x WHERE x.type = 'payment.refund_required' AND x.payload->>'paymentId' = p.id::text) AS refund_queued
          FROM payments p JOIN orders o ON o.id = p.order_id`,
     )
   ).rows;

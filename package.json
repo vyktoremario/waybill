@@ -2,13 +2,20 @@
   "name": "waybill",
   "private": true,
   "packageManager": "pnpm@10.14.0",
-  "engines": { "node": ">=22.12" },
+  "engines": {
+    "node": ">=22.12"
+  },
   "scripts": {
     "build": "turbo run build",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "infra:up": "docker compose up -d --wait",
-    "infra:down": "docker compose down -v"
+    "infra:down": "docker compose down -v",
+    "dev": "bash scripts/dev.sh",
+    "seed": "pnpm --filter @waybill/api seed",
+    "demo:failures": "pnpm --filter @waybill/shared build && pnpm --filter @waybill/api demo:failures",
+    "demo:hookstorm": "pnpm --filter @waybill/api hookstorm",
+    "invariants": "pnpm --filter @waybill/api invariants"
   },
   "devDependencies": {
     "turbo": "^2.11.13",

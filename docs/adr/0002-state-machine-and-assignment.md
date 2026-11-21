@@ -10,7 +10,7 @@ This design puts payment before assignment, so a driver never travels for an unp
 ## Decision
 
 ### State machine
-- States: `DRAFT, AWAITING_PAYMENT, PAID, OFFERED, ASSIGNED, EN_ROUTE_TO_PICKUP, PICKED_UP, EN_ROUTE_TO_DROPOFF, DELIVERED, RETURNING, RETURNED, CANCELLED, EXPIRED` (diagram in SPEC §4).
+- States: `AWAITING_PAYMENT, PAID, OFFERED, ASSIGNED, EN_ROUTE_TO_PICKUP, PICKED_UP, EN_ROUTE_TO_DROPOFF, DELIVERED, RETURNING, RETURNED, CANCELLED, EXPIRED` (diagram in SPEC §4).
 - One typed transition table in `packages/shared`: `{from, event, to, actors, guard?}`. The API rejects anything not in the table. The driver app renders its buttons from the same table. Property-based tests (fast-check) generate random event sequences and check that no unreachable or terminal-escape transition is ever accepted.
 - Persistence: `orders.version` for optimistic concurrency. A transition is:
   ```sql

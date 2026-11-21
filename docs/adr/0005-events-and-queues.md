@@ -12,7 +12,8 @@ State changes have to trigger follow-up work: assignment after `order.paid`, ref
   - One durable queue per consumer (`dispatch.assignment`, `payments.refunds`, `realtime.fanout`, `notify.customer`), bound by pattern.
   - Retries: on failure, nack to `<queue>.retry` (TTL 5 s → 30 s → 2 min via per-attempt queues), which dead-letters back to the main queue. After 5 attempts it goes to `<queue>.dlq`. The dispatcher dashboard shows the DLQ depth with a "replay" action.
   - Delays (offer expiry, SLA timers): publish to `delay.<n>s` queues with a TTL that dead-letter into `events`. No plugin is needed, so it runs on CloudAMQP's free tier.
-- **Consumer idempotency:** each message carries `messageId = outbox.id`. Each handler runs in a transaction that starts with `INSERT INTO processed_messages(consumer, message_id) ON CONFLICT DO NOTHING`. If it's a duplicate, the handler acks and skips.
+- **Consumer idempotency:** each message carries `messageId = outbox.message_id`. Every handler is written to be safe to run twice: it re-reads the current state under a row lock and does nothing if the work is already done. `processed_messages(consumer, message_id)` is written **after** the handler succeeds and is checked before running, so known duplicates are skipped cheaply.
+  *Changed during the build:* the first version claimed the message id *before* running the handler. That loses work if the process is killed after the claim commits but before the handler's own transaction does, which is exactly the F1 "kill -9 the worker" scenario. Writing the record afterwards, plus state-checking handlers, closes that gap.
 - **Ordering:** not relied on globally. Handlers check the current DB state (they react to facts, not to the message's claim), and per-order ordering is protected by `orders.version`.
 - **Event contracts:** zod schemas in `packages/shared/events`, with a `v` field for versioning.
 

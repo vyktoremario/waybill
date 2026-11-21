@@ -15,7 +15,12 @@
     "start:api": "node dist/main.js",
     "start:worker": "node dist/worker.js",
     "start:realtime": "node dist/realtime/main.js",
-    "start:paystack-sim": "node dist/paystack-sim/main.js"
+    "start:paystack-sim": "node dist/paystack-sim/main.js",
+    "invariants": "tsx src/demo/invariants.ts",
+    "demo:failures": "tsx src/demo/failure-demo.ts",
+    "sim:drivers": "tsx src/sim/drivers.ts",
+    "hookstorm:serve": "tsx src/demo/hookstorm-serve.ts",
+    "hookstorm": "hookstorm run --runs 20"
   },
   "dependencies": {
     "@nestjs/common": "^12.6.0",

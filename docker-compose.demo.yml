@@ -1,0 +1,53 @@
+# The whole backend in containers, so the failure demo can kill and restart each process.
+# Use together with the base file: docker compose -f docker-compose.yml -f docker-compose.demo.yml up -d --build
+x-app: &app
+  build: { context: ., dockerfile: apps/api/Dockerfile }
+  image: waybill-api
+  environment: &env
+    DATABASE_URL: postgres://waybill:waybill@postgres:5432/waybill
+    AMQP_URL: amqp://guest:guest@rabbitmq:5672
+    REDIS_URL: redis://redis:6379
+    JWT_SECRET: demo-only-secret
+    PIN_SECRET: demo-only-pin-secret
+    WEB_URL: ${WEB_URL:-http://localhost:3000}
+    PAYSTACK_BASE_URL: http://paystack-sim:4100
+    PAYSTACK_SECRET_KEY: sk_test_waybill_local
+    # Short timings so every scenario finishes in seconds.
+    OFFER_TTL_SECONDS: "8"
+    ASSIGNMENT_ALERT_SECONDS: "20"
+    ASSIGNMENT_SLA_SECONDS: "40"
+    PAYMENT_EXPIRY_SECONDS: "120"
+    RECONCILE_INTERVAL_SECONDS: "3"
+    RECONCILE_AFTER_SECONDS: "5"
+  depends_on:
+    postgres: { condition: service_healthy }
+    rabbitmq: { condition: service_healthy }
+    redis: { condition: service_healthy }
+
+services:
+  api:
+    <<: *app
+    command: ["node", "dist/main.js"]
+    ports: ["4000:4000"]
+    restart: on-failure
+  worker:
+    <<: *app
+    command: ["node", "dist/worker.js"]
+    # Crash-only: the worker exits when the broker goes away; the supervisor brings it back.
+    restart: always
+  realtime:
+    <<: *app
+    command: ["node", "dist/realtime/main.js"]
+    environment: { <<: *env, REALTIME_PORT: "4001" }
+    ports: ["4001:4001"]
+    restart: on-failure
+  paystack-sim:
+    <<: *app
+    command: ["node", "dist/paystack-sim/main.js"]
+    environment:
+      SIM_PORT: "4100"
+      SIM_PUBLIC_URL: http://localhost:4100
+      SIM_WEBHOOK_URL: http://api:4000/webhooks/paystack
+      PAYSTACK_SECRET_KEY: sk_test_waybill_local
+    ports: ["4100:4100"]
+    depends_on: []

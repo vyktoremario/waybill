@@ -34,9 +34,9 @@ Auth is kept small: seeded dispatcher and driver accounts with email + password 
 ## 4. Delivery state machine
 
 ```
-                 ┌──────────── cancel (customer/dispatcher) ─────────────┐
-                 │                                                        ▼
-DRAFT → AWAITING_PAYMENT ──pay──► PAID ──offer──► OFFERED ──accept──► ASSIGNED
+        ┌──────────── cancel (customer/dispatcher) ──────────────────────┐
+        │                                                                 ▼
+AWAITING_PAYMENT ──pay──►         PAID ──offer──► OFFERED ──accept──► ASSIGNED
                  │                 ▲  ◄─decline/timeout─┘                 │
           expire │                 └──────── unassign (dispatcher) ◄──────┤
                  ▼                                                        ▼
@@ -155,7 +155,7 @@ The demo uses a **local Paystack simulator** (same HMAC-SHA512 signature, same `
 ## 10. Stack and hosting
 
 - **Monorepo:** pnpm workspaces + Turborepo. `apps/api` (NestJS 11: REST + webhooks, plus the `worker` entrypoint and a small realtime WebSocket function), `apps/web` (Next.js 15, App Router), `apps/driver` (Expo SDK, expo-router, expo-sqlite, expo-location), `packages/shared` (zod schemas, state machine, event contracts).
-- **DB access:** Drizzle ORM + SQL migrations. Raw SQL where the transaction boundaries matter, so read-then-write races are visible in the code.
+- **DB access:** `pg` with plain SQL and numbered SQL migrations. Every transaction boundary and row lock is visible in the code (no ORM `save()` hiding read-then-write races).
 - **Maps:** MapLibre GL (web) and react-native-maps (driver) on OpenStreetMap-based tiles, so no API key is needed for the demo.
 - **Tests:** Vitest unit tests (state machine, payment state, ledger), Testcontainers integration tests (Postgres, RabbitMQ, Redis), Hookstorm in CI for webhooks, Playwright smoke test for the tracking page.
 - **Hosting (all Vercel, see ADR-0001):** web and `api` on Vercel Functions; realtime on a Vercel Function using WebSockets (public beta); `worker` as a Vercel Daemon (public beta, Dockerfile). Postgres on Neon (supports PostGIS), Redis on Upstash, RabbitMQ on CloudAMQP. Driver app via an Expo dev build / EAS preview, not the app stores.

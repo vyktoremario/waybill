@@ -17,7 +17,7 @@ export async function createApp(core: Core): Promise<NestExpressApplication> {
   return app;
 }
 
-async function main() {
+export async function main() {
   const config = loadConfig();
   if (process.env.MIGRATE_ON_START !== '0') await migrate(config.databaseUrl, { quiet: true });
   const core = createCore(config);
