@@ -1,0 +1,48 @@
+{
+  "name": "@waybill/api",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "migrate": "tsx src/db/migrate.ts",
+    "seed": "tsx src/db/seed.ts",
+    "dev:api": "tsx watch src/main.ts",
+    "dev:worker": "tsx watch src/worker.ts",
+    "dev:realtime": "tsx watch src/realtime/main.ts",
+    "dev:paystack-sim": "tsx watch src/paystack-sim/main.ts",
+    "start:api": "node dist/main.js",
+    "start:worker": "node dist/worker.js",
+    "start:realtime": "node dist/realtime/main.js",
+    "start:paystack-sim": "node dist/paystack-sim/main.js"
+  },
+  "dependencies": {
+    "@nestjs/common": "^12.6.0",
+    "@nestjs/core": "^12.6.0",
+    "@nestjs/platform-express": "^12.6.0",
+    "@waybill/shared": "workspace:*",
+    "amqplib": "^0.10.9",
+    "ioredis": "^5.8.2",
+    "jose": "^6.2.18",
+    "pg": "^8.23.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "uuidv7": "^1.2.1",
+    "ws": "^8.23.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@swc/core": "^1.16.22",
+    "@types/amqplib": "^0.10.8",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.19.0",
+    "@types/pg": "^8.23.1",
+    "@types/ws": "^8.18.2",
+    "hookstorm-cli": "^0.2.0",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "unplugin-swc": "^2.0.0",
+    "vitest": "^5.1.1"
+  }
+}
