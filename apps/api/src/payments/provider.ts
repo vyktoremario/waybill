@@ -32,17 +32,14 @@ export class PaystackProvider implements PaymentProvider {
   ) {}
 
   private async call(method: 'GET' | 'POST', path: string, body?: unknown): Promise<{ httpStatus: number; json: any }> {
-    let res: Response;
-    try {
-      res = await fetch(`${this.baseUrl}${path}`, {
-        method,
-        headers: { Authorization: `Bearer ${this.secretKey}`, 'Content-Type': 'application/json' },
-        body: body ? JSON.stringify(body) : undefined,
-        signal: AbortSignal.timeout(this.timeoutMs),
-      });
-    } catch (err: any) {
+    const res = await fetch(`${this.baseUrl}${path}`, {
+      method,
+      headers: { Authorization: `Bearer ${this.secretKey}`, 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: AbortSignal.timeout(this.timeoutMs),
+    }).catch((err: any) => {
       throw new ProviderError(`paystack unreachable: ${err?.message ?? err}`, 'unavailable');
-    }
+    });
     const json = await res.json().catch(() => ({}));
     if (res.status >= 500) throw new ProviderError(`paystack ${res.status}`, 'unavailable');
     return { httpStatus: res.status, json };
