@@ -3,13 +3,24 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Crypto from 'expo-crypto';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
+import { JetBrainsMono_600SemiBold } from '@expo-google-fonts/jetbrains-mono';
+import { SpaceGrotesk_700Bold } from '@expo-google-fonts/space-grotesk';
+import Feather from '@expo/vector-icons/Feather';
+import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
+import { ActivityIndicator, Alert, LayoutAnimation, Linking, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, TextInput, UIManager, View } from 'react-native';
+import MapView, { Marker, Polyline } from 'react-native-maps';
 import { HttpError, call, login, logout } from './src/api';
-import { setActiveOrder, startTracking, stopTracking } from './src/location';
+import { onPosition, setActiveOrder, startTracking, stopTracking } from './src/location';
 import { kv, outbox } from './src/store';
 import { sync, type SyncState } from './src/sync';
 import { c, mono } from './src/theme';
+import { FONTS, Text } from './src/text';
 import { Button, Card, ConnectionBanner, StepRow } from './src/ui';
+
+void SplashScreen.preventAutoHideAsync();
+if (Platform.OS === 'android') UIManager.setLayoutAnimationEnabledExperimental?.(true);
 
 const EVENT_FOR: Partial<Record<DriverCommandType, OrderEvent>> = {
   accept_offer: 'offer_accepted',
@@ -38,6 +49,14 @@ function optimistic(order: any): any {
 }
 
 export default function App() {
+  const [fontsLoaded] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, SpaceGrotesk_700Bold, JetBrainsMono_600SemiBold });
+  useEffect(() => {
+    if (fontsLoaded) void SplashScreen.hideAsync();
+  }, [fontsLoaded]);
+  return fontsLoaded ? <Main /> : null;
+}
+
+function Main() {
   const [signedIn, setSignedIn] = useState(Boolean(kv.get('token')));
   const [s, setS] = useState<SyncState>(sync.snapshot);
   const [current, setCurrent] = useState<any>(() => JSON.parse(kv.get('current') ?? 'null'));
@@ -72,6 +91,10 @@ export default function App() {
 
   const order = optimistic(current?.order);
   useEffect(() => setActiveOrder(order?.id), [order?.id]);
+  // Animate the move from one delivery step to the next.
+  useEffect(() => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+  }, [order?.status, current?.offer?.id, s.conflict]);
 
   useEffect(() => {
     if (s.rejected) {
@@ -237,7 +260,7 @@ function Home({ current, online, refresh, onSignOut }: { current: any; online: b
             <View style={{ height: 6, borderRadius: 3, backgroundColor: c.cobalt, width: `${Math.min(100, (left / ttl.current.seconds) * 100)}%` }} />
           </View>
         </View>
-        <Button label="Accept job" disabled={busy || !online || left === 0} onPress={() => void answer('accept_offer')} />
+        <Button icon="check" label="Accept job" disabled={busy || !online || left === 0} onPress={() => void answer('accept_offer')} />
         <Button label="Decline" kind="secondary" disabled={busy || !online} onPress={() => void answer('decline_offer')} />
         <Text style={[st.note, { textAlign: 'center' }]}>
           {online ? 'Accepting needs a connection, so no one else gets this job at the same time.' : 'You are offline. Offers can only be accepted online.'}
@@ -337,21 +360,22 @@ function ActiveDelivery({ order, online, enqueue }: { order: any; online: boolea
           {toPickup || returning ? `From ${order.customer_name}` : `For ${order.receiver_name}`} · {cap(order.package_size)} parcel · {order.item}
         </Text>
       </View>
+      <DeliveryMap target={target} toPickup={toPickup || returning} />
       <Card>
         {STEP_LABELS.map((label, i) => (
           <StepRow key={label} label={label} state={i < idx ? 'done' : i === idx ? 'now' : 'next'} right={i === idx ? 'Now' : undefined} />
         ))}
       </Card>
       <View style={{ flexDirection: 'row', gap: 10 }}>
-        <Button kind="secondary" label="Call customer" style={{ flex: 1 }} onPress={() => order.customerPhone && void Linking.openURL(`tel:${order.customerPhone}`)} />
-        <Button kind="secondary" label="Directions" style={{ flex: 1 }} onPress={() => void Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${target.lat},${target.lng}`)} />
+        <Button kind="secondary" icon="phone" label="Call" style={{ flex: 1 }} onPress={() => order.customerPhone && void Linking.openURL(`tel:${order.customerPhone}`)} />
+        <Button kind="secondary" icon="navigation" label="Directions" style={{ flex: 1 }} onPress={() => void Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${target.lat},${target.lng}`)} />
       </View>
       {order.status === 'ASSIGNED' && <Button label="Start trip to pickup" onPress={() => enqueue('start_trip', order.id)} />}
-      {order.status === 'EN_ROUTE_TO_PICKUP' && <Button label="Take photo & confirm pickup" onPress={() => setScreen('photo')} />}
+      {order.status === 'EN_ROUTE_TO_PICKUP' && <Button icon="camera" label="Take photo & confirm pickup" onPress={() => setScreen('photo')} />}
       {order.status === 'PICKED_UP' && <Button label="Start drive to drop-off" onPress={() => enqueue('start_dropoff', order.id)} />}
       {order.status === 'EN_ROUTE_TO_DROPOFF' && (
         <>
-          <Button label="I've arrived at drop-off" onPress={() => setScreen('pin')} />
+          <Button icon="map-pin" label="I've arrived at drop-off" onPress={() => setScreen('pin')} />
           <Button
             kind="danger-link"
             label="Can't deliver"
@@ -367,6 +391,43 @@ function ActiveDelivery({ order, online, enqueue }: { order: any; online: boolea
       {returning && <Button label="Confirm returned to sender" onPress={() => enqueue('confirm_return', order.id)} />}
     </ScrollView>
   );
+}
+
+/** The driver, the next stop, and a straight line between them (no routing yet: issue #4). */
+function DeliveryMap({ target, toPickup }: { target: { lat: number; lng: number }; toPickup: boolean }) {
+  const [me, setMe] = useState<{ lat: number; lng: number } | null>(null);
+  useEffect(() => onPosition((p) => setMe({ lat: p.lat, lng: p.lng })), []);
+  const ref = useRef<MapView>(null);
+  useEffect(() => {
+    const pts = [{ latitude: target.lat, longitude: target.lng }, ...(me ? [{ latitude: me.lat, longitude: me.lng }] : [])];
+    ref.current?.fitToCoordinates(pts, { edgePadding: { top: 48, right: 48, bottom: 48, left: 48 }, animated: true });
+  }, [target.lat, target.lng, me?.lat, me?.lng]);
+  return (
+    <View style={st.mapWrap}>
+      <MapView
+        ref={ref}
+        style={{ flex: 1 }}
+        initialRegion={{ latitude: target.lat, longitude: target.lng, latitudeDelta: 0.05, longitudeDelta: 0.05 }}
+        showsUserLocation
+        showsPointsOfInterests={false}
+        toolbarEnabled={false}
+        accessibilityLabel={toPickup ? 'Map to the pickup' : 'Map to the drop-off'}
+      >
+        <Marker coordinate={{ latitude: target.lat, longitude: target.lng }} title={toPickup ? 'Pickup' : 'Drop-off'}>
+          <View style={toPickup ? st.pinPickup : st.pinDrop} />
+        </Marker>
+        {me && <Polyline coordinates={[{ latitude: me.lat, longitude: me.lng }, { latitude: target.lat, longitude: target.lng }]} strokeColor={c.cobalt} strokeWidth={4} lineDashPattern={[8, 6]} />}
+      </MapView>
+      {me && <View style={st.mapBadge}><Text style={{ fontSize: 12, fontWeight: '600' }}>{distanceKm(me, target).toFixed(1)} km away · straight line</Text></View>}
+    </View>
+  );
+}
+
+function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
+  const R = 6371;
+  const toRad = (x: number) => (x * Math.PI) / 180;
+  const h = Math.sin(toRad(b.lat - a.lat) / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(toRad(b.lng - a.lng) / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
 }
 
 function PhotoStep({ onPhoto, onCancel }: { onPhoto: (uri: string) => void; onCancel: () => void }) {
@@ -457,7 +518,7 @@ function PinStep({ order, online, onConfirm, onCancel }: { order: any; online: b
               onPress={() => press(k)}
               style={({ pressed }) => [st.key, st.keyBtn, pressed && { backgroundColor: c.cobaltTint }]}
             >
-              <Text style={{ fontSize: 24, fontWeight: '600' }}>{k === 'del' ? '⌫' : k}</Text>
+              {k === 'del' ? <Feather name="delete" size={26} color={c.ink} /> : <Text style={{ fontSize: 24, fontWeight: '600' }}>{k}</Text>}
             </Pressable>
           ),
         )}
@@ -480,7 +541,7 @@ function ConflictScreen({ conflict, onDone }: { conflict: { message: string; ser
   return (
     <ScrollView contentContainerStyle={st.screen}>
       <View style={{ width: 56, height: 56, borderRadius: 14, backgroundColor: c.problemSoft, alignItems: 'center', justifyContent: 'center' }}>
-        <Text style={{ fontSize: 28, color: c.problem, fontWeight: '800' }}>!</Text>
+        <Feather name="alert-triangle" size={28} color={c.problem} />
       </View>
       <Text style={st.h1}>This order changed while you were offline</Text>
       <Text style={st.sub}>{explainConflict(conflict.serverStatus)}</Text>
@@ -550,7 +611,7 @@ const st = StyleSheet.create({
   h1: { fontSize: 28, fontWeight: '700', color: c.ink, lineHeight: 33 },
   sub: { fontSize: 15, color: c.ink2, lineHeight: 21 },
   note: { fontSize: 14, color: c.ink2, lineHeight: 20 },
-  input: { height: 52, borderWidth: 1, borderColor: c.line, borderRadius: 10, backgroundColor: c.surface, paddingHorizontal: 14, fontSize: 16 },
+  input: { fontFamily: FONTS.regular, height: 52, borderWidth: 1, borderColor: c.line, borderRadius: 10, backgroundColor: c.surface, paddingHorizontal: 14, fontSize: 16 },
   pinBox: { flex: 1, height: 72, borderRadius: 12, backgroundColor: c.surface, alignItems: 'center', justifyContent: 'center' },
   keypad: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   key: { width: '31.5%', height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 12 },
@@ -558,4 +619,8 @@ const st = StyleSheet.create({
   row: { flexDirection: 'row', padding: 14, borderBottomWidth: 1, borderBottomColor: c.lineSoft, gap: 10 },
   rowLabel: { width: 110, fontSize: 13, color: c.muted },
   rowValue: { flex: 1, fontSize: 14, fontWeight: '600' },
+  mapWrap: { height: 190, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: c.line, backgroundColor: '#E8ECF1' },
+  pinPickup: { width: 20, height: 20, borderRadius: 5, backgroundColor: c.ink, borderWidth: 3, borderColor: '#fff' },
+  pinDrop: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#fff', borderWidth: 6, borderColor: c.ink },
+  mapBadge: { position: 'absolute', left: 10, bottom: 10, backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 },
 });

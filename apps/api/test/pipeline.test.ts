@@ -56,7 +56,8 @@ describe('outbox → RabbitMQ → consumers (ADR-0005)', () => {
     await onlyOnline(core, [{ email: 'musa@drivers.waybill.test', lat: 9.04, lng: 7.49 }]);
     const { order } = await paidOrder(core);
     await until(async () => (await core.orders.getById(order.id)).status === 'OFFERED');
-    expect(core.published.sent.some((s) => s.msg.type === 'offer')).toBe(true);
+    // The offer push travels separately (outbox → RabbitMQ → realtime fan-out), so it can land a moment later.
+    await until(async () => core.published.sent.some((s) => s.msg.type === 'offer' && (s.msg as any).orderId === order.id));
     await until(async () => (await core.db.query(`SELECT 1 FROM outbox WHERE published_at IS NULL`)).rowCount === 0);
   });
 

@@ -18,7 +18,7 @@ async function main() {
     HOOKSTORM_ROUTES: '1',
     PAYSTACK_SECRET_KEY: 'sk_test_waybill_local',
   });
-  await (require('../main') as typeof import('../main')).main();
+  require('../main'); // starts the api with the environment above
 }
 
 void main();

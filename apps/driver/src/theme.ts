@@ -21,4 +21,4 @@ export const c = {
   disabledInk: '#4A525E',
 };
 
-export const mono = { fontFamily: 'Menlo', fontWeight: '600' as const };
+export const mono = { fontFamily: 'JetBrainsMono_600SemiBold' };

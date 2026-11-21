@@ -63,7 +63,7 @@ export function LiveMap({ points, center, zoom = 12, fitTo, onSelect }: { points
         const created = new maplibregl.Marker({ element: node }).setLngLat([p.lng, p.lat]).addTo(m);
         markers.current.set(p.id, created);
       } else {
-        mk.setLngLat([p.lng, p.lat]);
+        glide(mk, p.lng, p.lat);
         const node = mk.getElement();
         if (p.kind === 'driver') node.style.background = p.color ?? '#1d4ed8';
         if (p.label) node.title = p.label;
@@ -94,4 +94,25 @@ export function LiveMap({ points, center, zoom = 12, fitTo, onSelect }: { points
   }, [fitKey]);
 
   return <div ref={el} className="map" role="img" aria-label="Map" />;
+}
+
+/** Moves a marker smoothly to its new position (live updates arrive every few seconds). */
+function glide(mk: Marker, lng: number, lat: number) {
+  const from = mk.getLngLat();
+  if (Math.abs(from.lng - lng) < 1e-7 && Math.abs(from.lat - lat) < 1e-7) return;
+  const reduce = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const dist = Math.hypot(from.lng - lng, from.lat - lat);
+  if (reduce || dist > 0.05) {
+    mk.setLngLat([lng, lat]); // big jumps (e.g. a resync) snap instead of sliding across town
+    return;
+  }
+  const start = performance.now();
+  const ms = 900;
+  const step = (t: number) => {
+    const k = Math.min(1, (t - start) / ms);
+    const e = 1 - (1 - k) ** 3;
+    mk.setLngLat([from.lng + (lng - from.lng) * e, from.lat + (lat - from.lat) * e]);
+    if (k < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
 }

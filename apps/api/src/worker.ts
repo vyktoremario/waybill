@@ -50,7 +50,9 @@ export function consumers(core: Core): ConsumerSpec[] {
 }
 
 async function main() {
-  const config = loadConfig();
+  // The worker needs a direct (unpooled) Postgres connection: the outbox relay uses LISTEN/NOTIFY and migrations
+  // take a session advisory lock, neither of which works through a transaction-mode pooler. Neon provides one.
+  const config = { ...loadConfig(), ...(process.env.DATABASE_URL_UNPOOLED ? { databaseUrl: process.env.DATABASE_URL_UNPOOLED } : {}) };
   await migrate(config.databaseUrl, { quiet: true });
   const core = createCore(config);
   const rabbit = new Rabbit(config.amqpUrl);

@@ -20,16 +20,17 @@
     "demo:failures": "tsx src/demo/failure-demo.ts",
     "sim:drivers": "tsx src/sim/drivers.ts",
     "hookstorm:serve": "tsx src/demo/hookstorm-serve.ts",
-    "hookstorm": "hookstorm run --runs 20"
+    "hookstorm": "hookstorm run --runs 20",
+    "vercel-build": "pnpm --filter @waybill/shared build && tsc -p tsconfig.build.json && node dist/db/migrate.js"
   },
   "dependencies": {
-    "@nestjs/common": "^12.6.0",
-    "@nestjs/core": "^12.6.0",
-    "@nestjs/platform-express": "^12.6.0",
+    "@nestjs/common": "^11.2.11",
+    "@nestjs/core": "^11.2.11",
+    "@nestjs/platform-express": "^11.2.11",
     "@waybill/shared": "workspace:*",
     "amqplib": "^0.10.9",
     "ioredis": "^5.8.2",
-    "jose": "^6.2.18",
+    "jose": "^5.10.0",
     "pg": "^8.23.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",

@@ -45,6 +45,15 @@
         {
           "cameraPermission": "Take a photo of the parcel at pickup."
         }
+      ],
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 140,
+          "backgroundColor": "#F7F8FA"
+        }
       ]
     ],
     "scheme": "waybill-driver"

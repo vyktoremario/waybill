@@ -24,6 +24,20 @@ export class AssignmentService {
 
   /** Offers a paid order to the best available driver. Safe to call any number of times. */
   async tryAssign(orderId: string): Promise<'offered' | 'no_driver' | 'not_needed'> {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await this.tryAssignOnce(orderId);
+      } catch (err: any) {
+        // Two orders can pick the same driver at the same moment: both read "no open offer" before either
+        // commits. The unique index on pending offers per driver stops the second; retry so it sees the
+        // first offer and moves on to another driver (or schedules a retry) instead of failing.
+        if (err?.code === '23505' && err?.constraint === 'offers_one_pending_per_driver' && attempt < 4) continue;
+        throw err;
+      }
+    }
+  }
+
+  private async tryAssignOnce(orderId: string): Promise<'offered' | 'no_driver' | 'not_needed'> {
     return withTx(this.db, async (tx) => {
       const order = (await tx.query(`SELECT id, status, package_size FROM orders WHERE id = $1 FOR UPDATE`, [orderId])).rows[0];
       if (!order) throw notFound('order not found');

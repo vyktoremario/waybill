@@ -68,7 +68,7 @@ pnpm dev
 
 This starts Postgres, RabbitMQ and Redis in Docker, seeds demo accounts, and runs the api (:4000), worker, realtime server (:4001), Paystack simulator (:4100) and web app (:3000; set `WEB_PORT` to change it).
 
-- Book a delivery at http://localhost:3000, pay on the simulator's test checkout, and you land on the tracking page.
+- The landing page is http://localhost:3000. Book a delivery at /send, pay on the simulator's test checkout, and you land on the tracking page.
 - Dispatch dashboard: http://localhost:3000/dispatch (sign in as `dispatch@waybill.test`).
 - Simulated drivers that accept jobs and drive them end to end (in another terminal):
 

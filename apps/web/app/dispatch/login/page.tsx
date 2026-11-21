@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { Mark } from '@/components/Brand';
 import { DISPATCH_TOKEN_KEY, api } from '@/lib/api';
 
 export default function DispatchLogin() {
@@ -33,9 +34,12 @@ export default function DispatchLogin() {
   return (
     <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 16 }}>
       <form onSubmit={submit} className="card" style={{ width: '100%', maxWidth: 380, padding: 28, display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div>
-          <span className="eyebrow">Waybill dispatch</span>
-          <h1 style={{ fontSize: 28 }}>Sign in</h1>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <Mark size={40} />
+          <div>
+            <span className="eyebrow">Waybill dispatch</span>
+            <h1 style={{ fontSize: 28 }}>Sign in</h1>
+          </div>
         </div>
         <div className="field"><label htmlFor="e">Email</label><input id="e" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" /></div>
         <div className="field"><label htmlFor="p">Password</label><input id="p" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" /></div>
