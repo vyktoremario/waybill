@@ -30,7 +30,7 @@
     "@waybill/shared": "workspace:*",
     "amqplib": "^0.10.9",
     "ioredis": "^5.8.2",
-    "jose": "^6.2.18",
+    "jose": "^5.10.0",
     "pg": "^8.23.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
