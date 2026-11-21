@@ -8,6 +8,18 @@ import { sync } from './sync';
  */
 let sub: Location.LocationSubscription | null = null;
 let currentOrderId: string | undefined;
+type Pos = { lat: number; lng: number; heading?: number };
+let lastPos: Pos | null = null;
+const posListeners = new Set<(p: Pos) => void>();
+
+/** The UI (the delivery map) listens for the phone's position. */
+export function onPosition(fn: (p: Pos) => void): () => void {
+  posListeners.add(fn);
+  if (lastPos) fn(lastPos);
+  return () => {
+    posListeners.delete(fn);
+  };
+}
 
 export function setActiveOrder(orderId: string | undefined) {
   currentOrderId = orderId;
@@ -29,6 +41,8 @@ export async function startTracking(): Promise<boolean> {
       heading: loc.coords.heading != null && loc.coords.heading >= 0 ? loc.coords.heading : undefined,
       orderId: currentOrderId,
     });
+    lastPos = { lat: loc.coords.latitude, lng: loc.coords.longitude, heading: loc.coords.heading ?? undefined };
+    for (const fn of posListeners) fn(lastPos);
     sync.kick();
   });
   return true;

@@ -9,7 +9,7 @@ export function Mark({ size = 32, inverted = false }: { size?: number; inverted?
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-hidden="true">
       <rect width="48" height="48" rx="12" fill={bg} />
       <rect x="8.5" y="12.5" width="6" height="6" rx="1.5" fill={fg} />
-      <path d="M11.5 19 L17.5 35 L24 23 L30.5 35 L36.5 19" stroke={fg} strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M11.5 19 L17.5 35 L24 23 L30.5 35 L35.8 21.2" stroke={fg} strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
       <circle cx="36.5" cy="15.5" r="3.6" stroke={ring} strokeWidth="2.6" />
     </svg>
   );

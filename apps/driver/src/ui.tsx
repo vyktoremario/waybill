@@ -1,14 +1,19 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import Feather from '@expo/vector-icons/Feather';
+import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Text } from './text';
 import type { SyncState } from './sync';
 import { c } from './theme';
 
-export function Button({ label, onPress, kind = 'primary', disabled, style }: { label: string; onPress: () => void; kind?: 'primary' | 'secondary' | 'danger-link' | 'link'; disabled?: boolean; style?: StyleProp<ViewStyle> }) {
+export function Button({ label, onPress, kind = 'primary', disabled, style, icon }: { label: string; onPress: () => void; kind?: 'primary' | 'secondary' | 'danger-link' | 'link'; disabled?: boolean; style?: StyleProp<ViewStyle>; icon?: keyof typeof Feather.glyphMap }) {
   const s = kind === 'primary' ? (disabled ? styles.primaryDisabled : styles.primary) : kind === 'secondary' ? styles.secondary : styles.link;
   const t = kind === 'primary' ? (disabled ? styles.primaryDisabledText : styles.primaryText) : kind === 'secondary' ? styles.secondaryText : kind === 'danger-link' ? styles.dangerLinkText : styles.linkText;
   return (
     <Pressable accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress} style={({ pressed }) => [s, pressed && !disabled && { opacity: 0.85 }, style]}>
-      <Text style={t}>{label}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        {icon ? <Feather name={icon} size={kind === 'primary' ? 20 : 18} color={(StyleSheet.flatten(t) as { color?: string }).color} /> : null}
+        <Text style={t}>{label}</Text>
+      </View>
     </Pressable>
   );
 }
@@ -34,7 +39,7 @@ export function ConnectionBanner({ s, onToggleDemoOffline, demoOffline }: { s: S
   }
   return (
     <View style={[styles.banner, tone]} accessibilityRole="summary" accessibilityLabel={text}>
-      <View style={[styles.dot, { backgroundColor: s.online ? c.done : c.attention }]} />
+      {!s.online ? <Feather name="wifi-off" size={18} color={ink} /> : s.syncing || waiting ? <Feather name="refresh-cw" size={16} color={ink} /> : <View style={[styles.dot, { backgroundColor: c.done }]} />}
       <Text style={[styles.bannerText, { color: ink }]}>{text}</Text>
       {onToggleDemoOffline && (
         <Pressable onPress={onToggleDemoOffline} accessibilityRole="button" hitSlop={12} style={{ marginLeft: 'auto' }}>
@@ -48,7 +53,7 @@ export function ConnectionBanner({ s, onToggleDemoOffline, demoOffline }: { s: S
 export function StepRow({ label, state, right }: { label: string; state: 'done' | 'now' | 'next'; right?: string }) {
   return (
     <View style={[styles.step, state === 'now' && { backgroundColor: c.cobaltTint }]}>
-      <View style={[styles.stepDot, state === 'done' ? styles.stepDone : state === 'now' ? styles.stepNow : styles.stepNext]}>{state === 'done' && <Text style={styles.check}>✓</Text>}</View>
+      <View style={[styles.stepDot, state === 'done' ? styles.stepDone : state === 'now' ? styles.stepNow : styles.stepNext]}>{state === 'done' && <Feather name="check" size={14} color="#fff" />}</View>
       <Text style={[styles.stepText, state === 'now' && { fontWeight: '700' }, state === 'next' && { color: c.muted }]}>{label}</Text>
       {right ? <Text style={[styles.stepRight, state === 'now' && { color: c.cobalt }]}>{right}</Text> : null}
     </View>
