@@ -1,10 +1,13 @@
 'use client';
 
-import { Check, CreditCard, MapPin, Package, RotateCcw, ShieldCheck, Truck, WifiOff } from 'lucide-react';
+import { Camera, Smartphone, Check, CreditCard, Download, MapPin, Package, RotateCcw, ShieldCheck, Truck, WifiOff } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { DemoBanner, SiteFooter, SiteHeader } from '@/components/Brand';
+
+/** The latest Android build of the driver app, attached to the newest GitHub Release (stable URL). */
+const DRIVER_APK_URL = 'https://github.com/vyktoremario/waybill/releases/latest/download/waybill-driver.apk';
 
 const FAQ = [
   {
@@ -94,6 +97,36 @@ export default function Landing() {
               <Promise icon={<WifiOff size={22} aria-hidden="true" />} title="Patchy network? Still delivered.">The driver app keeps working without signal and syncs when it&apos;s back.</Promise>
             </div>
           </div>
+        </section>
+
+        <section id="riders" className="container section riders">
+          <div className="riders-copy">
+            <span className="eyebrow-mono">FOR DISPATCH RIDERS</span>
+            <h2 className="section-title">Are you a dispatch rider?</h2>
+            <p className="muted-lg">Get paid jobs near you with the price shown before you accept. The app walks you through each delivery step by step, and keeps working when the network drops: every step is saved on your phone and synced when you&apos;re back online.</p>
+            <ul className="rider-points">
+              <li><MapPin size={18} aria-hidden="true" />Jobs near you, matched to your bike, car or van</li>
+              <li><WifiOff size={18} aria-hidden="true" />Works without signal, syncs later</li>
+              <li><Camera size={18} aria-hidden="true" />Photo at pickup, PIN at the door: no disputes</li>
+            </ul>
+            <div className="rider-actions">
+              <a className="btn btn-cta btn-lg" href={DRIVER_APK_URL} download>
+                <Download size={20} aria-hidden="true" />Download for Android
+              </a>
+              <span className="field-hint">Android 8 or later. When your phone asks, allow your browser to install apps.</span>
+            </div>
+            <p className="rider-ios"><Smartphone size={16} aria-hidden="true" />iPhone: not available yet. Installing outside the App Store needs Apple&apos;s TestFlight, which this demo doesn&apos;t use.</p>
+            <div className="card rider-demo">
+              <strong>Try it with a demo rider account</strong>
+              <span>Email <code>halima@drivers.waybill.test</code> · password <code>waybill-demo</code></span>
+              <span className="field-hint">Go available in the app, then book a delivery here and watch the offer arrive.</span>
+            </div>
+          </div>
+          <figure className="rider-phone">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/img/driver-app-delivery.webp" alt="The Waybill driver app during a delivery: the pickup address, a map, the delivery steps and a Start trip button" width={560} height={950} />
+            <figcaption className="field-hint">Shown on iPhone. On Android the map is replaced by the distance for now.</figcaption>
+          </figure>
         </section>
 
         <section id="pricing" className="container section pricing">

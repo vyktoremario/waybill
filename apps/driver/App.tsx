@@ -397,6 +397,21 @@ function ActiveDelivery({ order, online, enqueue }: { order: any; online: boolea
 function DeliveryMap({ target, toPickup }: { target: { lat: number; lng: number }; toPickup: boolean }) {
   const [me, setMe] = useState<{ lat: number; lng: number } | null>(null);
   useEffect(() => onPosition((p) => setMe({ lat: p.lat, lng: p.lng })), []);
+  // Android maps need a Google Maps API key built into the app (issue #4). Until then, show the distance only.
+  if (Platform.OS === 'android') {
+    return (
+      <Card style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <Feather name="navigation" size={22} color={c.cobalt} />
+        <Text style={{ fontSize: 15, fontWeight: '600', flex: 1 }}>
+          {me ? `${distanceKm(me, target).toFixed(1)} km to the ${toPickup ? 'pickup' : 'drop-off'} (straight line)` : `Finding your location…`}
+        </Text>
+      </Card>
+    );
+  }
+  return <DeliveryMapView target={target} toPickup={toPickup} me={me} />;
+}
+
+function DeliveryMapView({ target, toPickup, me }: { target: { lat: number; lng: number }; toPickup: boolean; me: { lat: number; lng: number } | null }) {
   const ref = useRef<MapView>(null);
   useEffect(() => {
     const pts = [{ latitude: target.lat, longitude: target.lng }, ...(me ? [{ latitude: me.lat, longitude: me.lng }] : [])];

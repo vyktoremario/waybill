@@ -38,6 +38,7 @@ export function SiteHeader({ minimal = false }: { minimal?: boolean }) {
           <nav aria-label="Main" className="site-nav">
             <Link href="/#how">How it works</Link>
             <Link href="/#pricing">Pricing</Link>
+            <Link href="/#riders">For riders</Link>
             <Link href="/#faq">FAQ</Link>
           </nav>
         )}
