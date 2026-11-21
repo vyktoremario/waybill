@@ -173,11 +173,11 @@ export default function DispatchPage() {
       </header>
 
       <div className="kpis" aria-label="Today at a glance">
-        <Kpi label="Waiting for a driver" value={tabs.needs.length} attention={tabs.needs.some((o) => o.needs_attention)} />
-        <Kpi label="Out for delivery" value={tabs.active.length} />
-        <Kpi label="Needs attention" value={tabs.issues.length} attention={tabs.issues.length > 0} />
-        <Kpi label="Delivered today" value={orders.filter((o) => o.status === 'DELIVERED' && new Date(o.updated_at).toDateString() === new Date().toDateString()).length} />
-        <Kpi label="Drivers available" value={available.length} />
+        <Kpi label="Waiting for a driver" value={!loaded ? '–' : tabs.needs.length} attention={tabs.needs.some((o) => o.needs_attention)} />
+        <Kpi label="Out for delivery" value={!loaded ? '–' : tabs.active.length} />
+        <Kpi label="Needs attention" value={!loaded ? '–' : tabs.issues.length} attention={tabs.issues.length > 0} />
+        <Kpi label="Delivered today" value={!loaded ? '–' : orders.filter((o) => o.status === 'DELIVERED' && new Date(o.updated_at).toDateString() === new Date().toDateString()).length} />
+        <Kpi label="Drivers available" value={!loaded ? '–' : available.length} />
         <div className="kpi" style={{ justifyContent: 'center', fontSize: 12, color: 'var(--muted)' }}>
           <span><span className="kbd">j</span> <span className="kbd">k</span> move · <span className="kbd">Esc</span> clear</span>
         </div>
@@ -311,7 +311,7 @@ export default function DispatchPage() {
   );
 }
 
-function Kpi({ label, value, attention }: { label: string; value: number; attention?: boolean }) {
+function Kpi({ label, value, attention }: { label: string; value: number | string; attention?: boolean }) {
   return (
     <div className={`kpi ${attention ? 'kpi-attention' : ''}`}>
       <span className="kpi-label">{label}</span>

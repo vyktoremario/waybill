@@ -134,7 +134,7 @@ input, select, textarea { font-family: inherit; font-size: 16px; }
 .hero-pin-driver { left: 56%; top: 45%; width: 26px; height: 26px; border-radius: 50%; background: var(--cobalt); border: 5px solid #fff; animation: pulse 2s infinite; }
 .hero-pin-drop { right: 12%; top: 18%; width: 24px; height: 24px; border-radius: 50%; background: #fff; border: 6px solid var(--ink); }
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgb(29 78 216 / 35%); } 70% { box-shadow: 0 0 0 14px rgb(29 78 216 / 0%); } 100% { box-shadow: 0 0 0 0 rgb(29 78 216 / 0%); } }
-.hero-card { position: absolute; left: 0; bottom: 0; width: min(300px, 90%); background: var(--surface); border: 2px solid var(--ink); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 12px 30px rgb(14 17 22 / 12%); }
+.hero-card { position: absolute; right: 0; bottom: 0; width: min(300px, 90%); background: var(--surface); border: 2px solid var(--ink); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 12px 30px rgb(14 17 22 / 12%); }
 .hero-card-title { font-family: var(--font-display); font-size: 22px; }
 .pin-sm span { width: 40px; height: 46px; font-size: 22px; }
 @media (prefers-reduced-motion: reduce) { .hero-route { animation: none; stroke-dashoffset: 0; } .hero-pin-driver { animation: none; } }
@@ -212,7 +212,8 @@ dialog.modal::backdrop { background: rgb(14 17 22 / 45%); }
 .send-grid { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
 .send-grid > div { flex: 999 1 520px; }
 .summary { flex: 1 1 320px; position: sticky; top: 88px; }
-.form-card { margin: 0; padding: 22px; display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); min-width: 0; }
+.form-card { margin: 0; padding: 22px; display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); min-width: 0; }
+@media (max-width: 640px) { .form-card { grid-template-columns: minmax(0, 1fr); } }
 .span-2 { grid-column: 1 / -1; }
 .form-legend { display: inline-flex; align-items: center; gap: 8px; padding: 0 6px; font-family: var(--font-display); font-size: 17px; font-weight: 600; }
 .legend-dot { display: inline-block; width: 12px; height: 12px; flex: none; }
@@ -239,3 +240,4 @@ dialog.modal::backdrop { background: rgb(14 17 22 / 45%); }
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+.btn:disabled { opacity: 0.45; }
